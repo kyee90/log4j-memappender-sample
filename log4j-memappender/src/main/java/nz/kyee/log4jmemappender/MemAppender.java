@@ -12,19 +12,22 @@ import javax.management.MBeanRegistrationException;
 import javax.management.MalformedObjectNameException;
 import javax.management.NotCompliantMBeanException;
 
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.spi.LoggingEvent;
-public class MemAppender extends AppenderSkeleton implements MemAppenderMBean {
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.impl.Log4jLogEvent;
+import org.apache.logging.log4j.core.layout.PatternLayout;
+
+
+public class MemAppender extends AbstractAppender implements MemAppenderMBean {
     private long maxSize = 1000;
     private long discarded = 0;
-    private ArrayList<LoggingEvent> events = new ArrayList<>();
+    private ArrayList<LogEvent> events = new ArrayList<>();
 
-    public MemAppender() throws MalformedObjectNameException, MBeanRegistrationException, NotCompliantMBeanException {
+    /*public MemAppender() throws MalformedObjectNameException, MBeanRegistrationException, NotCompliantMBeanException {
         
-    }
+    }*/
 
-    protected void append(LoggingEvent event){
+    public void append(LogEvent event){
         if (events.size() == maxSize){
             events.subList(0,99).clear();
             discarded += 100;
@@ -34,7 +37,7 @@ public class MemAppender extends AppenderSkeleton implements MemAppenderMBean {
 
     public void exportToJSON(String fileName) throws IOException {
         StringBuilder jsonout = new StringBuilder();
-        for (LoggingEvent event: this.getCurrentLogs()){
+        for (LogEvent event: this.getCurrentLogs()){
             jsonout.append(new JsonLayout().format(event));
         }
         File file = new File(fileName+".json");
@@ -44,7 +47,7 @@ public class MemAppender extends AppenderSkeleton implements MemAppenderMBean {
         writer.close();
     }
 
-    public List<LoggingEvent> getCurrentLogs(){
+    public List<LogEvent> getCurrentLogs(){
         return Collections.unmodifiableList(events);
     }
 
@@ -64,11 +67,10 @@ public class MemAppender extends AppenderSkeleton implements MemAppenderMBean {
         return this.maxSize;
     }
 
-    @Override
-    public void close() {
+        public void close() {
     }
 
-    @Override
+    
     public boolean requiresLayout() {
         return false;
     }
@@ -86,5 +88,6 @@ public class MemAppender extends AppenderSkeleton implements MemAppenderMBean {
     @Override
     public long getLogCount() {
         return(this.events.size()-this.discarded);
-    }    
+    }
+    
 }
